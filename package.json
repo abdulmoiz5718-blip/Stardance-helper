@@ -1,0 +1,14 @@
+{
+  "name": "stardance-helper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A beginner-friendly Slack bot for Hack Club",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@slack/bolt": "^4.4.0",
+    "dotenv": "^16.6.1"
+  }
+}

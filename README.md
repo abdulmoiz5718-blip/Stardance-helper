@@ -1,100 +1,91 @@
 # Stardance Helper
 
-A Slack bot with the commands from the reference screenshot, using JavaScript, Slack Bolt, and Socket Mode.
+Stardance Helper is a Slack bot for the Hack Club workspace. It brings quick utilities, fun commands, and simple channel interactions together under the `/sdhelper-` command prefix.
 
-## Commands
+## What it can do
 
-| Command | What it does |
+### Bot basics
+
+| Command | What happens |
 | --- | --- |
-| `/sdhelper-ping` | Confirms the bot responds. |
-| `/sdhelper-help` | Lists commands and usage. |
-| `/sdhelper-status` | Confirms the bot is online. |
-| `/sdhelper-qotd` | Shows a quote of the day. |
-| `/sdhelper-trivia` | Posts a trivia question with answer buttons. |
-| `/sdhelper-dadjoke` | Fetches a dad joke. |
-| `/sdhelper-urban <term>` | Looks up a slang term. |
-| `/sdhelper-beat [HH:MM or @beat]` | Converts Swatch Internet Time; clock times are UTC. |
-| `/sdhelper-search <query>` | Returns a DuckDuckGo search link. |
-| `/sdhelper-userinfo @user` | Shows a Slack user's basic profile. |
-| `/sdhelper-poll <question>` | Posts a Yes/No poll with buttons in the current channel. |
-| `/sdhelper-remind <time> <task>` | Schedules a channel reminder, e.g. `10m homework` or `2h meeting`. |
-| `/sdhelper-weather <city>` | Shows current weather in Celsius. |
-| `/sdhelper-dns <domain>` | Looks up A and MX records. |
-| `/sdhelper-website <domain>` | Checks the website's response without following redirects. |
-| `/sdhelper-disify <email>` | Checks email format, mail DNS, and disposable-email signals. |
-| `/sdhelper-ip <ip>` | Looks up approximate location and network details for an IP address. |
+| `/sdhelper-help` | Shows the command list. |
+| `/sdhelper-ping` | Replies with “Pong!” to confirm the bot is responding. |
+| `/sdhelper-status` | Reports whether the bot is online and ready. |
 
-Use the `sdhelper` prefix consistently to reduce command-name conflicts in the Hack Club workspace.
+### Fun and discovery
 
-## 1. Update the Slack app
+| Command | What happens |
+| --- | --- |
+| `/sdhelper-qotd` | Shows a quote selected for the current day. |
+| `/sdhelper-trivia` | Posts a multiple-choice trivia question in the channel. Choose an answer button to reveal the result. |
+| `/sdhelper-dadjoke` | Fetches and shares a random dad joke. |
+| `/sdhelper-urban <term>` | Looks up a term in Urban Dictionary. |
+| `/sdhelper-beat` | Shows the current Swatch Internet Time. You can also convert a UTC time or beat, such as `/sdhelper-beat 14:30` or `/sdhelper-beat @600`. |
 
-Open [Slack API: Your Apps](https://api.slack.com/apps), choose **Stardance Helper**, then:
+### Slack and everyday tools
 
-1. Under **OAuth & Permissions → Bot Token Scopes**, add `users:read`. The app already needs `commands` and `chat:write`.
-2. Click **Reinstall to Hack Club** and approve the updated permission.
-3. Under **Basic Information → App-Level Tokens**, make sure Socket Mode has an app token with `connections:write`. Keep this `xapp-` token private.
-4. In **Slash Commands**, create the commands from the table above. Use each command name exactly as written. For Socket Mode, a public Request URL is not needed.
-5. If Slack shows an **Interactivity & Shortcuts** toggle, enable it so trivia and poll buttons can work. Socket Mode receives button clicks over its WebSocket connection.
-6. In your private test channel, invite the bot by typing `/invite @Stardance Helper`. This lets it post polls, trivia questions, and scheduled reminders there.
+| Command | What happens |
+| --- | --- |
+| `/sdhelper-search <query>` | Creates a DuckDuckGo search link for your query. |
+| `/sdhelper-userinfo @user` | Shows basic profile information for a selected Slack user. |
+| `/sdhelper-poll <question>` | Posts a Yes/No poll in the current channel. Members vote with buttons and the totals update. |
+| `/sdhelper-remind <time> <task>` | Schedules a reminder in the current channel, for example `/sdhelper-remind 10m finish homework` or `/sdhelper-remind 2h meeting`. Times can be from 1 minute to 120 days ahead. |
+| `/sdhelper-weather <city>` | Shows current weather for a city in Celsius. Add a country if the city name is ambiguous. |
 
-When Slack gives you a refreshed `xoxb-` Bot User OAuth Token, update `SLACK_BOT_TOKEN` in your private `.env` file. Never send tokens in chat or commit them to GitHub.
+### Web and network lookups
 
-## 2. Run it locally
+| Command | What happens |
+| --- | --- |
+| `/sdhelper-dns <domain>` | Looks up a domain’s IPv4 and mail-server DNS records. |
+| `/sdhelper-website <domain>` | Checks a website’s response and reports its status and public IP. |
+| `/sdhelper-disify <email>` | Checks email format, mail-DNS signals, and whether the address appears disposable. It cannot confirm that an inbox exists. |
+| `/sdhelper-ip <ip>` | Looks up approximate location, organization, and timezone for a public IP address. |
 
-Open a terminal in this folder. Install Node.js LTS from [nodejs.org](https://nodejs.org/) if needed, then run:
+## How it works
 
-```powershell
-npm install
-```
+1. A user enters a `/sdhelper-...` command in Slack.
+2. Slack sends the command to Stardance Helper through **Socket Mode**, a WebSocket connection. This means the bot does not need a public web address to receive commands.
+3. Slack Bolt routes the command to its matching handler. The handler acknowledges it promptly, then replies or performs the requested action.
+4. Simple replies are sent privately in Slack to the person who ran the command. Trivia, polls, and reminders appear in the channel so members can participate or see them.
+5. When needed, the bot fetches information from a third-party service, such as a weather or trivia API, and formats the result for Slack.
 
-If you have not already created the private token file, copy the example and edit it:
+Poll and trivia buttons are handled as Slack interactions. The bot saves their current state in `bot-data.json`, allowing votes and answers to update the original message. Reminder delivery is scheduled through Slack.
 
-```powershell
-Copy-Item .env.example .env
-notepad .env
-```
-
-Put your current tokens in `.env`:
+## Example
 
 ```text
-SLACK_BOT_TOKEN=xoxb-your-bot-token
-SLACK_APP_TOKEN=xapp-your-app-token
+/sdhelper-weather Karachi
+
+Weather for Karachi, Pakistan
+Clear sky
+Temperature: 29°C
+Wind: 11 km/h
 ```
 
-Start the bot:
+The exact result depends on current weather data.
 
-```powershell
-npm start
-```
+## Services and privacy
 
-Keep the terminal open while testing. Try all commands in `#sdhelper-test` or `#bot-spam`, not `#stardance`. Stop the bot with **Ctrl+C** before making code changes or moving it to Nest.
+Some commands send their input to third-party services to get a result:
 
-## Notes about outside services and privacy
+- Trivia questions come from the [Open Trivia Database](https://opentdb.com/).
+- Dad jokes come from [icanhazdadjoke](https://icanhazdadjoke.com/).
+- Urban Dictionary lookups use [Urban Dictionary](https://www.urbandictionary.com/). Its definitions are user-submitted and may include offensive content.
+- Weather lookups use [Open-Meteo](https://open-meteo.com/).
+- Email checks send the entered address to [DISIFY](https://docs.disify.com/). They check signals but cannot confirm that an inbox exists.
+- IP lookups send the entered address to [ipapi.co](https://ipapi.co/). Location results are approximate.
+- Search creates a [DuckDuckGo](https://duckduckgo.com/) link; it does not retrieve search results inside Slack.
 
-- Trivia questions come from [Open Trivia Database](https://opentdb.com/api_config.php); dad jokes come from [icanhazdadjoke](https://icanhazdadjoke.com/api); weather uses [Open-Meteo](https://open-meteo.com/en/docs).
-- The Urban Dictionary command uses user-submitted definitions, which may include offensive content.
-- `/sdhelper-disify` sends the entered email address to [DISIFY](https://docs.disify.com/guide/introduction.html). It checks signals only; it cannot prove an inbox exists.
-- IP lookup sends the entered IP to [ipapi.co](https://ipapi.co/api/); geolocation is approximate.
-- Polls and reminder messages appear in the channel. The bot must be a member of that channel. Reminder times are relative to when you run the command, and Slack schedules them for up to 120 days ahead.
-- Search returns a DuckDuckGo link; it does not fetch search results inside Slack.
-- Poll and quiz state is saved in `bot-data.json`, which is excluded from GitHub. If you delete that file, old poll buttons stop working.
+Polls, trivia questions, and reminders are visible in the channel where they are used. Invite Stardance Helper to a channel before using these features there. Other command replies are private to the person who invoked them.
 
-## 3. Push to GitHub safely
+## Built with
 
-Create an empty GitHub repository and follow GitHub's instructions to push this folder. `.gitignore` excludes `.env`, `node_modules`, and bot state. Before pushing, make sure `.env` is not listed among the files to upload.
+- JavaScript and Node.js
+- [Slack Bolt for JavaScript](https://slack.dev/bolt-js/)
+- Slack Socket Mode
+- Hosted on Hack Club Nest
 
-## 4. Keep it online with Hack Club Nest
+The bot’s commands and interactions are implemented in [`index.js`](index.js). Its runtime dependencies are listed in [`package.json`](package.json).
 
-Apply for an account in the [Hack Club Dashboard](https://dashboard.hackclub.app/) if needed. The [Nest Quickstart](https://guides.hackclub.app/index.php/Quickstart) explains approval and SSH access. Connect as your Nest username; do not assume root access.
 
-On Nest, clone your repository and install the packages:
 
-```sh
-git clone YOUR_REPOSITORY_URL
-cd stardance-helper
-npm install
-```
-
-Create a private `.env` on Nest with the same current tokens and run `chmod 600 .env`. Do not put tokens in GitHub. Start with `npm start` and check the commands.
-
-To stay online after disconnecting and restart after a reboot, configure a persistent service method that Nest permits for your account. A user-level systemd service may work, but boot-time autostart can require administrator-enabled user lingering. Do not use `sudo` or a root service. If Nest does not allow user services/lingering, ask in `#nest-help` for its supported persistent-process setup.
